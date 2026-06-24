@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>外研社新概念英语智慧版2：实践与进步 · 96课音频</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: #F5F3EF;
+  color: #333;
+  min-height: 100vh;
+  padding-bottom: 32px;
+}
+
+/* 顶部标题栏 */
+.header {
+  background: #fff;
+  padding: 20px 16px 16px;
+  text-align: center;
+  border-bottom: 1px solid #E8E5DF;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+.header .subtitle {
+  font-size: 13px;
+  color: #999;
+}
+.header .recent-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: #EBF5FB;
+  border-radius: 12px;
+  font-size: 12px;
+  color: #2980B9;
+  cursor: pointer;
+  border: none;
+}
+
+/* 课次网格 */
+.grid-container {
+  padding: 16px 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.unit-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  padding: 12px 4px 8px;
+  border-bottom: 1px solid #E8E5DF;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+.lesson-btn {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.lesson-btn:active {
+  transform: scale(0.92);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.lesson-btn.played {
+  background: #EBF5FB;
+  color: #2980B9;
+}
+.lesson-btn.current {
+  background: #2980B9;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(41,128,185,0.3);
+}
+
+/* 播放器弹窗 */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overlay.show { display: flex; }
+.player-card {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px 16px 0 0;
+  padding: 24px 20px 32px;
+  animation: slideUp 0.25s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.player-card .lesson-num {
+  font-size: 36px;
+  font-weight: 700;
+  color: #2980B9;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.player-card .lesson-title {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 20px;
+}
+.player-card audio {
+  width: 100%;
+  margin-bottom: 16px;
+}
+.player-card .actions {
+  display: flex;
+  gap: 8px;
+}
+.player-card .btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.player-card .btn-prev,
+.player-card .btn-next {
+  background: #F5F3EF;
+  color: #333;
+}
+.player-card .btn-close {
+  background: #2980B9;
+  color: #fff;
+}
+
+/* 搜索栏 */
+.search-bar {
+  padding: 0 12px 12px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.search-bar input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #E0DCD5;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  color: #333;
+}
+.search-bar input:focus {
+  border-color: #2980B9;
+}
+.search-bar input::placeholder {
+  color: #bbb;
+}
+
+/* 无匹配 */
+.no-match {
+  text-align: center;
+  padding: 40px 16px;
+  color: #999;
+  font-size: 14px;
+  display: none;
+}
+.no-match.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>外研社新概念英语智慧版2：实践与进步</h1>
+  <div class="subtitle">96课音频</div>
+  <button class="recent-badge" id="recentBadge" style="display:none" onclick="goToLastPlayed()">
+    最近听过 → Lesson <span id="recentNum"></span>
+  </button>
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="搜索课次号或课文标题…" oninput="filterLessons()">
+</div>
+
+<div class="grid-container" id="gridContainer"></div>
+<div class="no-match" id="noMatch">未找到匹配的课次</div>
+
+<div class="overlay" id="overlay">
+  <div class="player-card">
+    <div class="lesson-num" id="playerNum">01</div>
+    <div class="lesson-title" id="playerTitle">Lesson 1</div>
+    <audio id="playerAudio" controls controlsList="nodownload">
+      您的浏览器不支持音频播放
+    </audio>
+    <div class="actions">
+      <button class="btn btn-prev" onclick="prevLesson()">← 上一课</button>
+      <button class="btn btn-next" onclick="nextLesson()">下一课 →</button>
+    </div>
+    <div class="actions" style="margin-top:8px">
+      <button class="btn btn-close" onclick="closePlayer()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 96课标题数据 ==========
+var titles = {
+   1: "A private conversation",
+   2: "Breakfast or lunch?",
+   3: "Please send me a card",
+   4: "An exciting trip",
+   5: "No wrong numbers",
+   6: "Percy Buttons",
+   7: "Too late",
+   8: "The best and the worst",
+   9: "A cold welcome",
+  10: "Not for jazz",
+  11: "One good turn deserves another",
+  12: "Goodbye and good luck",
+  13: "The Greenwood Boys",
+  14: "Do you speak English?",
+  15: "Good news",
+  16: "A polite request",
+  17: "Always young",
+  18: "He often does this!",
+  19: "Sold out",
+  20: "One man in a boat",
+  21: "Mad or not?",
+  22: "A glass envelope",
+  23: "A new house",
+  24: "It could be worse",
+  25: "Do the English speak English?",
+  26: "The best art critics",
+  27: "A wet night",
+  28: "No parking",
+  29: "Taxi!",
+  30: "Football or polo?",
+  31: "Success story",
+  32: "Shopping made easy",
+  33: "Out of the darkness",
+  34: "Quick work",
+  35: "Stop thief!",
+  36: "Across the Channel",
+  37: "The Olympic Games",
+  38: "Everything except the weather",
+  39: "Am I all right?",
+  40: "Food and talk",
+  41: "Do you call that a hat?",
+  42: "Not very musical",
+  43: "Over the South Pole",
+  44: "Through the forest",
+  45: "A clear conscience",
+  46: "Expensive and uncomfortable",
+  47: "A thirsty ghost",
+  48: "Did you want to tell me something?",
+  49: "The end of a dream",
+  50: "Taken for a ride",
+  51: "Reward for virtue",
+  52: "A pretty carpet",
+  53: "Hot snake",
+  54: "Sticky fingers",
+  55: "Not a gold mine",
+  56: "Faster than sound!",
+  57: "Can I help you, madam?",
+  58: "A blessing in disguise?",
+  59: "In or out?",
+  60: "The future",
+  61: "Trouble with the Hubble",
+  62: "After the fire",
+  63: "She was not amused",
+  64: "The Channel Tunnel",
+  65: "Jumbo versus the police",
+  66: "Sweet as honey!",
+  67: "Volcanoes",
+  68: "Persistent",
+  69: "But not murder!",
+  70: "Red for danger",
+  71: "A famous clock",
+  72: "A car called Bluebird",
+  73: "The record-holder",
+  74: "Out of the limelight",
+  75: "SOS",
+  76: "April Fools' Day",
+  77: "A successful operation",
+  78: "The last one?",
+  79: "By air",
+  80: "The Crystal Palace",
+  81: "Escape",
+  82: "Monster or fish?",
+  83: "After the elections",
+  84: "On strike",
+  85: "Never too old to learn",
+  86: "Out of control",
+  87: "A perfect alibi",
+  88: "Trapped in a mine",
+  89: "A slip of the tongue",
+  90: "What's for supper?",
+  91: "Three men in a basket",
+  92: "Asking for trouble",
+  93: "A noble gift",
+  94: "Future champions",
+  95: "A fantasy",
+  96: "The dead return"
+};
+
+// ========== 音频URL配置 ==========
+// 修改此URL前缀以匹配你的CDN/服务器地址
+var audioBaseUrl = "https://your-domain.com/nce2/audio/";
+
+function getAudioUrl(num) {
+  return audioBaseUrl + "lesson" + String(num).padStart(2, "0") + ".mp3";
+}
+
+// ========== 当前播放 ==========
+var currentLesson = null;
+
+// ========== 渲染网格 ==========
+function pad(n) { return String(n).padStart(2, "0"); }
+
+function buildGrid() {
+  var container = document.getElementById("gridContainer");
+  var lastPlayed = localStorage.getItem("nce2_last_played");
+  if (lastPlayed) {
+    document.getElementById("recentBadge").style.display = "inline-block";
+    document.getElementById("recentNum").textContent = pad(Number(lastPlayed));
+  }
+
+  // 分组：每24课一个单元
+  var units = [
+    { name: "Unit 1 · Lesson 1 – 24", start: 1, end: 24 },
+    { name: "Unit 2 · Lesson 25 – 48", start: 25, end: 48 },
+    { name: "Unit 3 · Lesson 49 – 72", start: 49, end: 72 },
+    { name: "Unit 4 · Lesson 73 – 96", start: 73, end: 96 }
+  ];
+
+  var html = "";
+  for (var u = 0; u < units.length; u++) {
+    var unit = units[u];
+    html += '<div class="unit-title">' + unit.name + '</div>';
+    html += '<div class="grid">';
+    for (var i = unit.start; i <= unit.end; i++) {
+      var cls = "lesson-btn";
+      if (lastPlayed && Number(lastPlayed) === i) cls += " played";
+      html += '<button class="' + cls + '" data-lesson="' + i + '" onclick="openPlayer(' + i + ')">' + i + '</button>';
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+// ========== 播放器 ==========
+function openPlayer(num) {
+  currentLesson = num;
+  document.getElementById("playerNum").textContent = pad(num);
+  document.getElementById("playerTitle").textContent = "Lesson " + num + " · " + titles[num];
+  var audio = document.getElementById("playerAudio");
+  audio.src = getAudioUrl(num);
+  audio.load();
+  audio.play().catch(function(){});
+
+  document.getElementById("overlay").classList.add("show");
+
+  // 保存记录
+  localStorage.setItem("nce2_last_played", num);
+  updateGridHighlight(num);
+
+  // 显示最近听过
+  var badge = document.getElementById("recentBadge");
+  badge.style.display = "inline-block";
+  document.getElementById("recentNum").textContent = pad(num);
+
+  // 滚动到当前课
+  scrollToLesson(num);
+}
+
+function closePlayer() {
+  var audio = document.getElementById("playerAudio");
+  audio.pause();
+  document.getElementById("overlay").classList.remove("show");
+}
+
+function prevLesson() {
+  if (currentLesson > 1) openPlayer(currentLesson - 1);
+}
+
+function nextLesson() {
+  if (currentLesson < 96) openPlayer(currentLesson + 1);
+}
+
+function goToLastPlayed() {
+  var last = localStorage.getItem("nce2_last_played");
+  if (last) {
+    openPlayer(Number(last));
+    scrollToLesson(Number(last));
+  }
+}
+
+function updateGridHighlight(num) {
+  var buttons = document.querySelectorAll(".lesson-btn");
+  for (var i = 0; i < buttons.length; i++) {
+    var b = buttons[i];
+    var n = Number(b.getAttribute("data-lesson"));
+    b.classList.remove("played", "current");
+    if (n === num) {
+      b.classList.add("current");
+    } else {
+      b.classList.add("played");
+    }
+  }
+}
+
+function scrollToLesson(num) {
+  var el = document.querySelector('.lesson-btn[data-lesson="' + num + '"]');
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+// ========== 搜索 ==========
+function filterLessons() {
+  var query = document.getElementById("searchInput").value.trim().toLowerCase();
+  var buttons = document.querySelectorAll(".lesson-btn");
+  var titles_el = document.querySelectorAll(".unit-title");
+  var noMatch = document.getElementById("noMatch");
+  var anyMatch = false;
+
+  for (var i = 0; i < buttons.length; i++) {
+    var b = buttons[i];
+    var num = b.getAttribute("data-lesson");
+    var title = titles[Number(num)].toLowerCase();
+    var match = !query || num.indexOf(query) !== -1 || title.indexOf(query) !== -1;
+    b.style.display = match ? "flex" : "none";
+    if (match) anyMatch = true;
+  }
+
+  for (var j = 0; j < titles_el.length; j++) {
+    titles_el[j].style.display = query ? "none" : "";
+  }
+
+  noMatch.classList.toggle("show", !anyMatch && query.length > 0);
+}
+
+// ========== 初始化 ==========
+buildGrid();
+
+// 点击弹窗背景关闭
+document.getElementById("overlay").addEventListener("click", function(e) {
+  if (e.target === this) closePlayer();
+});
+</script>
+
+</body>
+</html>
